@@ -1,16 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// إعدادات CORS
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// API للتحقق من الخادم
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok',
@@ -19,11 +18,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API لمعالجة النص والصور
 app.post('/api/process-image', express.json(), (req, res) => {
   try {
     const { text, backgroundColor, fontSize, textColor } = req.body;
-    
     res.json({ 
       success: true,
       message: 'تمت معالجة الصورة بنجاح',
@@ -35,28 +32,24 @@ app.post('/api/process-image', express.json(), (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// صفحة رئيسية
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('index.html not found');
+  }
 });
 
-// معالجة الأخطاء
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).json({ 
-    error: 'خطأ في الخادم',
-    message: err.message 
-  });
+  res.status(500).json({ error: 'خطأ في الخادم', message: err.message });
 });
 
-// بدء الخادم
 app.listen(PORT, () => {
   console.log(`🚀 تطبيق ZEUS PRO يعمل على المنفذ ${PORT}`);
 });
